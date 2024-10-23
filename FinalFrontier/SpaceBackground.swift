@@ -7,6 +7,7 @@ struct Star: Identifiable {
     var starY: CGFloat
     var size: CGFloat
     var speed: CGFloat
+    var direction: CGFloat
 }
 
 struct SpaceBackground: View {
@@ -54,18 +55,31 @@ struct SpaceBackground: View {
         }
         .animation(.easeInOut, value: pageIndex)
     }
+    
+    private func moveStar(_ x: CGFloat, _ y: CGFloat, _ velocity: CGFloat, _ direction: CGFloat ) -> (x: CGFloat, y: CGFloat) {
+        let newX = x + cos(direction) * velocity
+        let newY = y + sin(direction) * velocity
+        return (newX, newY)
+    }
 
     private func createStars(for size: CGSize) -> [Star] {
+        let halfWidth = size.width / 2
+        let halfHeight = size.height / 2
         return (0..<numberOfStars).map { _ in
             let starSize = CGFloat.random(in: 1...5)
-            let speed = starSize / 10
+            let speed = starSize / 5
+            
+            let xOffset = CGFloat.random(in: -halfWidth...halfWidth)
+            let yOffset = CGFloat.random(in: -halfHeight...halfHeight)
+            let direction = atan2(yOffset, xOffset)
             
             return Star(
                 shape: Bool.random() ? AnyShape(Rhombus()) : AnyShape(Circle()),
-                starX: CGFloat.random(in: 0...size.width),  // Random across entire width
-                starY: CGFloat.random(in: 0...size.height), // Random across entire height
+                starX: xOffset + halfWidth,
+                starY: yOffset + halfHeight,
                 size: starSize,
-                speed: speed
+                speed: speed,
+                direction: direction
             )
         }
     }
@@ -78,24 +92,14 @@ struct SpaceBackground: View {
             for index in stars.indices {
                 let star = stars[index]
                 
-                // Calculate direction from center
-                let deltaX = star.starX - centerX
-                let deltaY = star.starY - centerY
-                let distance = sqrt(deltaX * deltaX + deltaY * deltaY)
-                
-                // Prevent division by zero and calculate angle
-                if distance != 0 {
-                    let angle = atan2(deltaY, deltaX)
+                let (newX, newY) = moveStar(star.starX, star.starY, star.speed, star.direction)
+                stars[index].starX = newX
+                stars[index].starY = newY
 
-                    // Move star outward from the center
-                    stars[index].starX += cos(angle) * star.speed
-                    stars[index].starY += sin(angle) * star.speed
-                }
-
-                // If star goes off-screen, reset it near the center
+                // If star goes off-screen, reset it at the center
                 if stars[index].starX < 0 || stars[index].starX > size.width || stars[index].starY < 0 || stars[index].starY > size.height {
-                    stars[index].starX = centerX + CGFloat.random(in: -100...100)
-                    stars[index].starY = centerY + CGFloat.random(in: -100...100)
+                    stars[index].starX = centerX
+                    stars[index].starY = centerY
                 }
             }
         }
