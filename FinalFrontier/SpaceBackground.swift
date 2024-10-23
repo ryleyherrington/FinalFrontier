@@ -69,8 +69,15 @@ struct SpaceBackground: View {
             let starSize = CGFloat.random(in: 1...5)
             let speed = starSize / 5
             
-            let xOffset = CGFloat.random(in: -halfWidth...halfWidth)
-            let yOffset = CGFloat.random(in: -halfHeight...halfHeight)
+            // "squash" random numbers toward the origin
+            let lambda = 1.5
+            let xRandomMultiplier = pow(CGFloat.random(in: 0...1), lambda)
+            let yRandomMultiplier = pow(CGFloat.random(in: 0...1), lambda)
+            let xRandomNegafier: CGFloat = Bool.random() ? 1 : -1;
+            let yRandomNegafier: CGFloat = Bool.random() ? 1 : -1;
+            
+            let xOffset = xRandomMultiplier * xRandomNegafier * halfWidth
+            let yOffset = yRandomMultiplier * yRandomNegafier * halfHeight
             let direction = atan2(yOffset, xOffset)
             
             return Star(
